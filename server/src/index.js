@@ -1,11 +1,14 @@
 const { Command, Client } = require('amps');
 const data = require('./data/trsy-prices.json');
+const { writeFileSync } = require('fs');
+const { join} = require('path');
 
 const oofedArray = [];
-const sanitizeData = ()=> {
-    data.forEach(d=> {
+const sanitizeData = () => {
+    data.forEach(d => {
         d.Time = (new Date(d.Time)).getTime();
     });
+    writeFileSync(join(__dirname,'data/sanitized.json'), JSON.stringify(data, undefined, 5));
 };
 
 const getClient = async () => {
@@ -90,6 +93,12 @@ const getUpdate = () => {
 const deleteAll = async (client) => {
     await client.sowDelete('/prices/trsy', '1=1');
 }
+const deleteTemp = async (client) => {
+    const items = data[0];
+    items.Time = 20;
+    const response = await client.sowDeleteByData('/prices/trsy', items);
+    console.log(response);
+};
 
 const publishRandom = async (client) => {
     console.log('Ramdom Publish');
@@ -114,6 +123,8 @@ const publishRandom = async (client) => {
 const start = async () => {
     sanitizeData();
     const client = await getClient();
+    // deleteTemp(client);
+
     deleteAll(client);
     for (const [index, item] of data.entries()) {
         try {
